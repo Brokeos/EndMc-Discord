@@ -1,5 +1,7 @@
 const PokedexApplication = require('../../../applications/pokedex.application')
 
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
 module.exports = {
     name: 'pokemon',
     data: subcommand => subcommand
@@ -11,24 +13,66 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: ['Ephemeral'] });
         
         const pokemonName = interaction.options.getString('nom');
         
         try {
             const pokemon = await PokedexApplication.getPokemon(pokemonName);
+            const pokemonSpecies = await PokedexApplication.getPokemonSpecies(pokemonName);
+            
+            const abilities = pokemon.abilities.map(ability => capitalize(ability.ability.name)).join(', ');
+            const types =  pokemon.types.map(type => capitalize(type.type.name)).join(', ');
+            const color = capitalize(pokemonSpecies.color.name);
+            const habitat = capitalize(pokemonSpecies.habitat.name);
+            const formattedName = capitalize(pokemon.name);
+            
             const embed = {
-                title: `${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)} | #${pokemon.id}`,
-                image: {
+                title: `${formattedName} | #${pokemon.id}`,
+                fields: [
+                    {
+                        name: '📖  About',
+                        value: '\u200B',
+                        inline: false
+                    },
+                    {
+                        name: 'Abilities',
+                        value: abilities,
+                        inline: false
+                    },
+                    {
+                        name: 'Types',
+                        value: types,
+                        inline: false
+                    },
+                    {
+                        name: 'Color',
+                        value: color,
+                        inline: false
+                    },
+                    {
+                        name: 'Capture Rate',
+                        value: pokemonSpecies.capture_rate,
+                        inline: false
+                    },
+                    {
+                        name: 'Habitat',
+                        value: habitat,
+                        inline: false
+                    },
+                ],
+                thumbnail: {
                     url: pokemon.sprites.front_default
                 },
                 color: 0x0099FF,
                 footer: {
-                    text: `${pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)} - #${pokemon.id}`
+                    text: `${formattedName} - #${pokemon.id}`
                 }
             };
 
-            await interaction.editReply({ embeds: [embed] });
+            await interaction.editReply({
+                embeds: [embed]
+            });
         } catch (error) {
             if (error.message.includes('not found')) {
                 await interaction.editReply({

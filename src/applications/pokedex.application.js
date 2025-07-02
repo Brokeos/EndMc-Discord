@@ -1,5 +1,6 @@
 const axios = require('axios');
 const Pokemon = require('../models/Pokemon');
+const PokemonSpecies = require("../models/PokemonSpecies");
 
 class PokedexApplication {
     constructor() {
