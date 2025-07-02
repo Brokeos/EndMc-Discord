@@ -1,6 +1,5 @@
-const PokedexApplication = require('../../../applications/pokedex.application')
-
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+const PokedexApplication = require('../../../applications/pokedex.application');
+const { createPokemonInfoEmbed } = require('../../utils/pokemonDisplay');
 
 module.exports = {
     name: 'pokemon',
@@ -19,73 +18,9 @@ module.exports = {
         
         try {
             const pokemon = await PokedexApplication.getPokemon(pokemonName);
-            const pokemonSpecies = await PokedexApplication.getPokemonSpecies(pokemonName);
-            
-            const abilities = pokemon.abilities.map(ability => capitalize(ability.ability.name)).join(', ');
-            const types =  pokemon.types.map(type => capitalize(type.type.name)).join(', ');
-            const color = capitalize(pokemonSpecies.color.name);
-            const habitat = capitalize(pokemonSpecies.habitat.name);
-            const formattedName = capitalize(pokemon.name);
-            
-            const statsButton = {
-                type: 1,
-                components: [
-                    {
-                        type: 2,
-                        style: 1,
-                        label: "📊 Voir les stats",
-                        custom_id: `pokemon_stats_${pokemon.id}`
-                    }
-                ]
-            };
-            
-            const embed = {
-                title: `${formattedName} | #${pokemon.id}`,
-                fields: [
-                    {
-                        name: '📖  About',
-                        value: '\u200B',
-                        inline: false
-                    },
-                    {
-                        name: 'Abilities',
-                        value: abilities,
-                        inline: false
-                    },
-                    {
-                        name: 'Types',
-                        value: types,
-                        inline: false
-                    },
-                    {
-                        name: 'Color',
-                        value: color,
-                        inline: false
-                    },
-                    {
-                        name: 'Capture Rate',
-                        value: pokemonSpecies.capture_rate,
-                        inline: false
-                    },
-                    {
-                        name: 'Habitat',
-                        value: habitat,
-                        inline: false
-                    },
-                ],
-                thumbnail: {
-                    url: pokemon.sprites.front_default
-                },
-                color: 0x0099FF,
-                footer: {
-                    text: `${formattedName} - #${pokemon.id}`
-                }
-            };
+            const pokemonDisplay = await createPokemonInfoEmbed(pokemon.id);
 
-            await interaction.editReply({
-                embeds: [embed],
-                components: [statsButton]
-            });
+            await interaction.editReply(pokemonDisplay);
         } catch (error) {
             if (error.message.includes('not found')) {
                 await interaction.editReply({
