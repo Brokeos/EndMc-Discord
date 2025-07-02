@@ -27,6 +27,18 @@ module.exports = {
             const habitat = capitalize(pokemonSpecies.habitat.name);
             const formattedName = capitalize(pokemon.name);
             
+            const statsButton = {
+                type: 1,
+                components: [
+                    {
+                        type: 2,
+                        style: 1,
+                        label: "📊 Voir les stats",
+                        custom_id: `pokemon_stats_${pokemon.id}`
+                    }
+                ]
+            };
+            
             const embed = {
                 title: `${formattedName} | #${pokemon.id}`,
                 fields: [
@@ -71,7 +83,8 @@ module.exports = {
             };
 
             await interaction.editReply({
-                embeds: [embed]
+                embeds: [embed],
+                components: [statsButton]
             });
         } catch (error) {
             if (error.message.includes('not found')) {
