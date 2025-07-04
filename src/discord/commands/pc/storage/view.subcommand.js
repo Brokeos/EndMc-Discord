@@ -84,7 +84,7 @@ module.exports = {
                     if (buttonInteraction.user.id !== interaction.user.id) {
                         await buttonInteraction.reply({
                             content: '❌ Seul l\'utilisateur qui a lancé la commande peut naviguer.',
-                            ephemeral: true
+                            flags: ['Ephemeral']
                         });
                         return;
                     }
