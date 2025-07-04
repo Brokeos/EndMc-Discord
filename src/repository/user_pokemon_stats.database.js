@@ -1,5 +1,21 @@
 const { database } = require('./config');
 
+/*
+CREATE TABLE user_pokemon_stats (
+	guild_id VARCHAR(20) NOT NULL,
+	user_id VARCHAR(20) NOT NULL,
+	user_pokemon_id INT NOT NULL,
+	hp INT NOT NULL,
+	attack INT NOT NULL,
+	defense INT NOT NULL,
+	special_attack INT NOT NULL,
+	special_defense INT NOT NULL,
+	speed INT NOT NULL,
+	PRIMARY KEY (guild_id, user_id, user_pokemon_id),
+	FOREIGN KEY (guild_id, user_id, user_pokemon_id) REFERENCES user_pokemon(guild_id, user_id, user_pokemon_id) ON DELETE CASCADE
+);
+ */
+
 async function get(guild_id, user_id, user_pokemon_id) {
 	const query = 'SELECT * FROM user_pokemon_stats WHERE guild_id = $1 AND user_id = $2 AND user_pokemon_id = $3';
 	const result = await database.query(query, [guild_id, user_id, user_pokemon_id]);
