@@ -59,7 +59,10 @@ async function update(id, updates = {}) {
 }
 
 async function getAllByMember(guild_id, user_id){
-	const query = 'SELECT * FROM user_pokemon WHERE guild_id = $1 AND user_id = $2';
+	const query = `
+		SELECT up.* FROM user_pokemon up
+		LEFT JOIN user_inventory ui ON up.id = ui.pokemon_id
+		WHERE up.guild_id = $1 AND up.user_id = $2 AND ui.pokemon_id IS NULL`;
 	const values = [guild_id, user_id];
 	const result = await database.query(query, values);
 	
