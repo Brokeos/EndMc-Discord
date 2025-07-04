@@ -131,8 +131,115 @@ const createPokemonStorageEmbed = (userPokemonList, member, page, totalPages) =>
     };
 };
 
+const createPokemonInventoryEmbed = (inventory, member) => {
+    const fields = [];
+    
+    for (let slot = 1; slot <= 3; slot++) {
+        const pokemon = inventory.find(item => item.slot_position === slot);
+        
+        if (pokemon) {
+            fields.push({
+                name: `🎒 Slot ${slot}`,
+                value: `**${pokemon.pokemon_data.pokemon_name}** (ID: ${pokemon.pokemon_data.id})\nNiveau ${pokemon.pokemon_data.level} • ${pokemon.pokemon_data.experience} XP`,
+                inline: true
+            });
+        } else {
+            fields.push({
+                name: `🎒 Slot ${slot}`,
+                value: '*Vide*',
+                inline: true
+            });
+        }
+    }
+
+    return {
+        title: `📋 Inventaire de ${member.displayName}`,
+        description: 'Vos Pokémon équipés (maximum 3)',
+        fields: fields,
+        color: 0x2ecc71
+    };
+};
+
+const createPokemonInventoryAddEmbed = (inventoryItem) => {
+    const embed = {
+        title: '✅ Pokémon ajouté à l\'inventaire',
+        fields: [
+            {
+                name: '🎯 Pokémon',
+                value: inventoryItem.pokemon_data.pokemon_name,
+                inline: true
+            },
+            {
+                name: '🎒 Slot',
+                value: inventoryItem.slot_position.toString(),
+                inline: true
+            },
+            {
+                name: '🆔 ID',
+                value: inventoryItem.pokemon_data.id.toString(),
+                inline: true
+            },
+            {
+                name: '📈 Niveau',
+                value: inventoryItem.pokemon_data.level.toString(),
+                inline: true
+            },
+            {
+                name: '⭐ Expérience',
+                value: inventoryItem.pokemon_data.experience.toString(),
+                inline: true
+            }
+        ],
+        color: 0x3498db
+    };
+
+    if (inventoryItem.pokemon_data.sprite_url) {
+        embed.thumbnail = {
+            url: inventoryItem.pokemon_data.sprite_url
+        };
+    }
+
+    return embed;
+};
+
+const createPokemonInventoryRemoveEmbed = (pokemonData, slotPosition) => {
+    const embed = {
+        title: '✅ Pokémon retiré de l\'inventaire',
+        description: 'Le Pokémon a été remis dans votre stockage.',
+        fields: [
+            {
+                name: '🎯 Pokémon',
+                value: pokemonData.pokemon_name,
+                inline: true
+            },
+            {
+                name: '🎒 Slot libéré',
+                value: slotPosition.toString(),
+                inline: true
+            },
+            {
+                name: '🆔 ID',
+                value: pokemonData.id.toString(),
+                inline: true
+            }
+        ],
+        color: 0x3498db
+    };
+
+    if (pokemonData.sprite_url) {
+        embed.thumbnail = {
+            url: pokemonData.sprite_url
+        };
+    }
+
+    return embed;
+};
+
 module.exports = {
     createPokemonInfoEmbed,
     createPokemonStatsEmbed,
-    createPokemonStorageEmbed
+    createPokemonStorageEmbed,
+    createPokemonInventoryEmbed,
+    createPokemonInventoryAddEmbed,
+    createPokemonInventoryRemoveEmbed
 }; 
