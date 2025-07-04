@@ -8,7 +8,9 @@ function loadSubcommands(folderPath) {
         return subcommands;
     }
     
-    const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.subcommand.js'));
+    const files = fs.readdirSync(folderPath).filter(file => 
+        file.endsWith('.subcommand.js') || file.endsWith('.subcommandgroup.js')
+    );
     
     for (const file of files) {
         const filePath = path.join(folderPath, file);
@@ -28,7 +30,11 @@ function loadSubcommands(folderPath) {
 function addSubcommandsToBuilder(commandBuilder, subcommands) {
     subcommands.forEach(subcommand => {
         if (subcommand.data) {
-            commandBuilder.addSubcommand(subcommand.data);
+            if (subcommand.type === 'group') {
+                commandBuilder.addSubcommandGroup(subcommand.data);
+            } else {
+                commandBuilder.addSubcommand(subcommand.data);
+            }
         }
     });
     return commandBuilder;

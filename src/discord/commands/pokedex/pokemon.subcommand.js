@@ -8,7 +8,7 @@ module.exports = {
         .setDescription('Afficher les informations d\'un Pokémon')
         .addStringOption(option =>
             option.setName('nom')
-                .setDescription('Le nom du Pokémon')
+                .setDescription('Le nom ou ID du Pokémon')
                 .setRequired(true)
         ),
     async execute(interaction) {
