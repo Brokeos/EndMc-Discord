@@ -71,6 +71,8 @@ async function remove(id)
 	const query = 'DELETE FROM user_pokemon WHERE id = $1';
 	
 	await database.query(query, [id]);
+	
+	return true;
 }
 
 module.exports = {
