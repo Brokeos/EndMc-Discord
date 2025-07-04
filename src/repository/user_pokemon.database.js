@@ -66,9 +66,17 @@ async function getAllByMember(guild_id, user_id){
 	return result.rows;
 }
 
+async function remove(id)
+{
+	const query = 'DELETE FROM user_pokemon WHERE id = $1';
+	
+	await database.query(query, [id]);
+}
+
 module.exports = {
 	get,
 	add,
 	update,
-	getAllByMember
+	getAllByMember,
+	remove
 }

@@ -1,4 +1,4 @@
-const { get, add, update, getAllByMember } = require('./user_pokemon.database');
+const { get, add, update, getAllByMember, remove } = require('./user_pokemon.database');
 const cacheService = require('../services/cache.service');
 
 class UserPokemon {
@@ -105,6 +105,14 @@ class UserPokemon {
 		}
 		
 		return null;
+	}
+	
+	static async delete(id) {
+		const cacheKey = cacheService.generateKey(this.ENTITY_NAME, id);
+		
+		await cacheService.delete(cacheKey);
+		
+		return await remove(id);
 	}
 }
 
