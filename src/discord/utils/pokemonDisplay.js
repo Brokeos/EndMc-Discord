@@ -118,7 +118,7 @@ const createPokemonStorageEmbed = (userPokemonList, member, page, totalPages) =>
     const pokemonOnPage = userPokemonList.slice(startIndex, endIndex);
     
     const fields = pokemonOnPage.map(pokemon => ({
-        name: `${capitalize(pokemon.pokemon_name)} | ID: ${pokemon.id}`,
+        name: `${capitalize(pokemon.pokemon_name)} | ID: ${pokemon.user_pokemon_id}`,
         value: `Niveau: ${pokemon.level} | XP: ${pokemon.experience}`,
         inline: false
     }));
@@ -140,7 +140,7 @@ const createPokemonInventoryEmbed = (inventory, member) => {
         if (pokemon) {
             fields.push({
                 name: `🎒 Slot ${slot}`,
-                value: `**${pokemon.pokemon_data.pokemon_name}** (ID: ${pokemon.pokemon_data.id})\nNiveau ${pokemon.pokemon_data.level} • ${pokemon.pokemon_data.experience} XP`,
+                value: `**${pokemon.pokemon_data.pokemon_name}** (ID: ${pokemon.pokemon_data.user_pokemon_id})\nNiveau ${pokemon.pokemon_data.level} • ${pokemon.pokemon_data.experience} XP`,
                 inline: true
             });
         } else {
@@ -176,7 +176,7 @@ const createPokemonInventoryAddEmbed = (inventoryItem) => {
             },
             {
                 name: '🆔 ID',
-                value: inventoryItem.pokemon_data.id.toString(),
+                value: inventoryItem.pokemon_data.user_pokemon_id.toString(),
                 inline: true
             },
             {
@@ -219,7 +219,7 @@ const createPokemonInventoryRemoveEmbed = (pokemonData, slotPosition) => {
             },
             {
                 name: '🆔 ID',
-                value: pokemonData.id.toString(),
+                value: pokemonData.user_pokemon_id.toString(),
                 inline: true
             }
         ],
@@ -235,11 +235,50 @@ const createPokemonInventoryRemoveEmbed = (pokemonData, slotPosition) => {
     return embed;
 };
 
+const createPaginationButtons = (currentPage, totalPages, type, userId) => {
+    if (totalPages <= 1) return [];
+    
+    return [{
+        type: 1,
+        components: [
+            {
+                type: 2,
+                style: 2,
+                label: '⏮️',
+                custom_id: `${type}_first_${userId}`,
+                disabled: currentPage === 0
+            },
+            {
+                type: 2,
+                style: 1,
+                label: '◀️',
+                custom_id: `${type}_previous_${userId}`,
+                disabled: currentPage === 0
+            },
+            {
+                type: 2,
+                style: 1,
+                label: '▶️',
+                custom_id: `${type}_next_${userId}`,
+                disabled: currentPage === totalPages - 1
+            },
+            {
+                type: 2,
+                style: 2,
+                label: '⏭️',
+                custom_id: `${type}_last_${userId}`,
+                disabled: currentPage === totalPages - 1
+            }
+        ]
+    }];
+};
+
 module.exports = {
     createPokemonInfoEmbed,
     createPokemonStatsEmbed,
     createPokemonStorageEmbed,
     createPokemonInventoryEmbed,
     createPokemonInventoryAddEmbed,
-    createPokemonInventoryRemoveEmbed
+    createPokemonInventoryRemoveEmbed,
+    createPaginationButtons
 }; 

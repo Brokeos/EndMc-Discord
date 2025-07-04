@@ -1,44 +1,54 @@
 const UserInventory = require('../../../../repository/user_inventory.entity');
+const { createPokemonInventoryAddEmbed } = require('../../../utils/pokemonDisplay');
 
 module.exports = {
     name: 'add',
     data: subcommand => subcommand
         .setName('add')
-        .setDescription('Ajouter un Pokémon de votre stockage à votre inventaire')
+        .setDescription('Ajouter un Pokémon du stockage à l\'inventaire')
+        .addUserOption(option =>
+            option.setName('membre')
+                .setDescription('Le membre dont ajouter le Pokémon à l\'inventaire')
+                .setRequired(true)
+        )
         .addIntegerOption(option =>
-            option.setName('pokemon_id')
-                .setDescription('ID interne du Pokémon à ajouter à l\'inventaire')
+            option.setName('id')
+                .setDescription('L\'ID du Pokémon dans le stockage du joueur')
                 .setRequired(true)
         ),
     async execute(interaction) {
-        const pokemonId = interaction.options.getInteger('pokemon_id');
-        const guildId = interaction.guild.id;
-        const userId = interaction.user.id;
-
+        await interaction.deferReply({ flags: ['Ephemeral'] });
+        
+        const member = interaction.options.getMember('membre');
+        const userPokemonId = interaction.options.getInteger('id');
+        
         try {
-            const inventoryItem = await UserInventory.add(guildId, userId, pokemonId);
-
-            await interaction.reply({
-                content: `✅ **${inventoryItem.pokemon_data.pokemon_name}** (ID: ${inventoryItem.pokemon_data.id}) a été ajouté à votre inventaire dans le slot ${inventoryItem.slot_position}.`,
-                flags: ['Ephemeral']
+            const inventoryItem = await UserInventory.add(interaction.guildId, member.id, userPokemonId);
+            
+            const embed = createPokemonInventoryAddEmbed(inventoryItem);
+            
+            await interaction.editReply({
+                embeds: [embed]
             });
         } catch (error) {
-            console.error('Error adding pokemon to inventory:', error);
-            
-            let errorMessage = '❌ Une erreur est survenue lors de l\'ajout du Pokémon.';
-            
-            if (error.message === 'Pokemon not found in user storage') {
-                errorMessage = '❌ Ce Pokémon n\'existe pas dans votre stockage.';
-            } else if (error.message === 'Pokemon is already in inventory') {
-                errorMessage = '❌ Ce Pokémon est déjà dans votre inventaire.';
-            } else if (error.message === 'Inventory is full') {
-                errorMessage = '❌ Votre inventaire est plein (3 Pokémon maximum). Retirez d\'abord un Pokémon avec `/pc inventory remove`.';
+            if (error.message.includes('not found in user storage')) {
+                await interaction.editReply({
+                    content: `❌ Aucun Pokémon trouvé avec l'ID ${userPokemonId} dans le stockage de ${member.displayName}.`
+                });
+            } else if (error.message.includes('already in inventory')) {
+                await interaction.editReply({
+                    content: `❌ Ce Pokémon est déjà dans l'inventaire de ${member.displayName}.`
+                });
+            } else if (error.message.includes('Inventory is full')) {
+                await interaction.editReply({
+                    content: `❌ L'inventaire de ${member.displayName} est plein (3/3 slots utilisés).`
+                });
+            } else {
+                console.error('Erreur lors de l\'ajout du Pokémon à l\'inventaire:', error);
+                await interaction.editReply({
+                    content: '❌ Une erreur est survenue lors de l\'ajout du Pokémon à l\'inventaire.'
+                });
             }
-
-            await interaction.reply({
-                content: errorMessage,
-                flags: ['Ephemeral']
-            });
         }
     }
 }; 
