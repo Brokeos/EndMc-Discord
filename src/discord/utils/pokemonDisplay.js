@@ -112,7 +112,27 @@ const createPokemonStatsEmbed = async (pokemonId) => {
     };
 };
 
+const createPokemonStorageEmbed = (userPokemonList, member, page, totalPages) => {
+    const startIndex = page * 5;
+    const endIndex = Math.min(startIndex + 5, userPokemonList.length);
+    const pokemonOnPage = userPokemonList.slice(startIndex, endIndex);
+    
+    const fields = pokemonOnPage.map(pokemon => ({
+        name: `${capitalize(pokemon.pokemon_name)} | ID: ${pokemon.id}`,
+        value: `Niveau: ${pokemon.level} | XP: ${pokemon.experience}`,
+        inline: false
+    }));
+
+    return {
+        title: `📦 Stockage Pokémon de ${member.displayName}`,
+        fields: fields,
+        color: 0x3498db,
+        footer: {text: `Page ${page + 1}/${totalPages} • Total: ${userPokemonList.length}`}
+    };
+};
+
 module.exports = {
     createPokemonInfoEmbed,
-    createPokemonStatsEmbed
+    createPokemonStatsEmbed,
+    createPokemonStorageEmbed
 }; 
