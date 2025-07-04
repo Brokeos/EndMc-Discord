@@ -55,6 +55,12 @@ class UserPokemon {
 		return null;
 	}
 	
+	static async _invalidateMemberCache(guild_id, user_id) {
+		const memberCacheKey = cacheService.generateKey(`${this.ENTITY_NAME}_member`, `${guild_id}_${user_id}`);
+		
+		await cacheService.delete(memberCacheKey);
+	}
+	
 	static async add(guild_id, user_id, pokemon_api_id, pokemon_name, sprite_url) {
 		const result = await add(guild_id, user_id, pokemon_api_id, pokemon_name, sprite_url);
 		const userPokemon = new UserPokemon(
@@ -70,6 +76,7 @@ class UserPokemon {
 		const cacheKey = cacheService.generateKey(this.ENTITY_NAME, result.id);
 		
 		await cacheService.set(cacheKey, userPokemon, this.CACHE_TTL);
+		await this._invalidateMemberCache(guild_id, user_id);
 		
 		return userPokemon;
 	}
@@ -100,17 +107,71 @@ class UserPokemon {
 			);
 			
 			await cacheService.set(cacheKey, updatedUserPokemon, this.CACHE_TTL);
+			await this._invalidateMemberCache(result.guild_id, result.user_id);
 			
 			return updatedUserPokemon;
 		}
 		
 		return null;
 	}
+
+	static async getAllByMember(guild_id, user_id) {
+		const memberCacheKey = cacheService.generateKey(`${this.ENTITY_NAME}_member`, `${guild_id}_${user_id}`);
+		const cachedMemberPokemon = await cacheService.get(memberCacheKey);
+		
+		if (cachedMemberPokemon) {
+			return cachedMemberPokemon.map(pokemon => new UserPokemon(
+				pokemon.id,
+				pokemon.guild_id,
+				pokemon.user_id,
+				pokemon.pokemon_api_id,
+				pokemon.pokemon_name,
+				pokemon.level,
+				pokemon.experience,
+				pokemon.sprite_url
+			));
+		}
+		
+		const results = await getAllByMember(guild_id, user_id);
+		
+		if (results && results.length > 0) {
+			const userPokemonList = results.map(result => new UserPokemon(
+				result.id,
+				result.guild_id,
+				result.user_id,
+				result.pokemon_api_id,
+				result.pokemon_name,
+				result.level,
+				result.experience,
+				result.sprite_url
+			));
+			
+			await cacheService.set(memberCacheKey, userPokemonList, this.CACHE_TTL);
+			
+			for (const userPokemon of userPokemonList) {
+				const individualCacheKey = cacheService.generateKey(this.ENTITY_NAME, userPokemon.id);
+				const existingCache = await cacheService.get(individualCacheKey);
+				
+				if (!existingCache) {
+					await cacheService.set(individualCacheKey, userPokemon, this.CACHE_TTL);
+				}
+			}
+			
+			return userPokemonList;
+		}
+		
+		return [];
+	}
 	
 	static async delete(id) {
+		const userPokemon = await this.get(id);
 		const cacheKey = cacheService.generateKey(this.ENTITY_NAME, id);
 		
 		await cacheService.delete(cacheKey);
+		
+		if (userPokemon) {
+			await this._invalidateMemberCache(userPokemon.guild_id, userPokemon.user_id);
+		}
 		
 		return await remove(id);
 	}

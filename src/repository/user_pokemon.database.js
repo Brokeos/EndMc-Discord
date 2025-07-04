@@ -48,7 +48,7 @@ async function update(id, updates = {}) {
 		.map((field, index) => `${allowedFields[field]} = $${index + 2}`)
 		.join(', ');
 	const query = `
-    UPDATE matches
+    UPDATE user_pokemon
     SET ${setClause}
     WHERE id = $1
     RETURNING *`;
