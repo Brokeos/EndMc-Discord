@@ -27,7 +27,8 @@ module.exports = {
                 
                 await message.reply({
                     content: levelUpMessages,
-                    allowedMentions: { repliedUser: false }
+                    allowedMentions: { repliedUser: false },
+                    flags: ['Ephemeral']
                 });
             }
         } catch (error) {
