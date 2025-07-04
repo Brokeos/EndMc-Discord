@@ -73,4 +73,39 @@ class UserPokemon {
 		
 		return userPokemon;
 	}
+	
+	static async update(id, level, experience) {
+		const cacheKey = cacheService.generateKey(this.ENTITY_NAME, id);
+		const userPokemon = await this.get(id);
+		
+		if (!userPokemon) {
+			throw new Error(`UserPokemon with id ${id} not found`);
+		}
+		
+		const result = await update(id, {
+			'level': level,
+			'experience': experience
+		});
+		
+		if (result) {
+			const updatedUserPokemon = new UserPokemon(
+				result.id,
+				result.guild_id,
+				result.user_id,
+				result.pokemon_api_id,
+				result.pokemon_name,
+				result.level,
+				result.experience,
+				result.sprite_url
+			);
+			
+			await cacheService.set(cacheKey, updatedUserPokemon, this.CACHE_TTL);
+			
+			return updatedUserPokemon;
+		}
+		
+		return null;
+	}
 }
+
+module.exports = UserPokemon;

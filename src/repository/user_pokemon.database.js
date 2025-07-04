@@ -9,9 +9,10 @@ CREATE TABLE user_pokemon (
     pokemon_name VARCHAR(100) NOT NULL,
     level INT DEFAULT 1,
     experience INT DEFAULT 0,
-    sprite_url VARCHAR(255),
-    INDEX idx_user_pokemon (guild_id, user_id)
+    sprite_url VARCHAR(255)
 );
+
+CREATE UNIQUE INDEX idx_user_pokemon ON user_pokemon(guild_id, user_id)
 */
 
 async function get(id){
