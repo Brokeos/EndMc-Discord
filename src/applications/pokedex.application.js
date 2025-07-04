@@ -32,6 +32,29 @@ class PokedexApplication {
             throw new Error(`Error fetching Pokemon: ${error.message}`);
         }
     }
+
+    async getPokemonBaseStats(pokemonName) {
+        try {
+            const pokemon = await this.getPokemon(pokemonName);
+            const stats = {};
+            
+            pokemon.stats.forEach(stat => {
+                const statName = stat.stat.name.replace('-', '_');
+                stats[statName] = stat.base_stat;
+            });
+            
+            return {
+                hp: stats.hp,
+                attack: stats.attack,
+                defense: stats.defense,
+                special_attack: stats.special_attack,
+                special_defense: stats.special_defense,
+                speed: stats.speed
+            };
+        } catch (error) {
+            throw new Error(`Error fetching Pokemon stats: ${error.message}`);
+        }
+    }
 }
 
 module.exports = new PokedexApplication();
