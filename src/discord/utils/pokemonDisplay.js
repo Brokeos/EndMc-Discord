@@ -1,4 +1,5 @@
 const PokedexApplication = require('../../applications/pokedex.application');
+const experienceConfig = require('../../config/experience.config');
 
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
@@ -6,6 +7,16 @@ const createUnicodeBar = (value, max, length) => {
     const filledLength = Math.round((value / max) * length);
     const emptyLength = length - filledLength;
     return '🟩'.repeat(filledLength) + '⬛'.repeat(emptyLength);
+};
+
+const createStatsDisplay = (stats) => {
+    return stats.map(stat => {
+        const statName = stat.name.replace('-', ' ').toUpperCase();
+        const statValue = stat.value;
+        const progressBar = createUnicodeBar(statValue, experienceConfig.levelUp.maxStatValue, 10);
+        
+        return `**${statName}**: ${statValue}\n${progressBar}`;
+    }).join('\n\n');
 };
 
 const createPokemonInfoEmbed = async (pokemonId) => {
@@ -77,13 +88,12 @@ const createPokemonInfoEmbed = async (pokemonId) => {
 const createPokemonStatsEmbed = async (pokemonId) => {
     const pokemon = await PokedexApplication.getPokemon(pokemonId);
     
-    const statsDisplay = pokemon.stats.map(stat => {
-        const statName = stat.stat.name.replace('-', ' ').toUpperCase();
-        const statValue = stat.base_stat;
-        const progressBar = createUnicodeBar(statValue, 255, 10);
-        
-        return `**${statName}**: ${statValue}\n${progressBar}`;
-    }).join('\n\n');
+    const formattedStats = pokemon.stats.map(stat => ({
+        name: stat.stat.name,
+        value: stat.base_stat
+    }));
+    
+    const statsDisplay = createStatsDisplay(formattedStats);
     
     const backButton = {
         type: 1,
@@ -235,6 +245,65 @@ const createPokemonInventoryRemoveEmbed = (pokemonData, slotPosition) => {
     return embed;
 };
 
+const createUserPokemonStatsEmbed = (userPokemon, pokemonStats) => {
+    const formattedName = capitalize(userPokemon.pokemon_name);
+    
+    const formattedStats = [
+        { name: 'hp', value: pokemonStats.hp },
+        { name: 'attack', value: pokemonStats.attack },
+        { name: 'defense', value: pokemonStats.defense },
+        { name: 'special-attack', value: pokemonStats.special_attack },
+        { name: 'special-defense', value: pokemonStats.special_defense },
+        { name: 'speed', value: pokemonStats.speed }
+    ];
+    
+    const statsDisplay = createStatsDisplay(formattedStats);
+    
+    const currentLevel = experienceConfig.calculateLevel(userPokemon.experience);
+    const xpForCurrentLevel = experienceConfig.getXpForCurrentLevel(userPokemon.experience);
+    const xpNeededForNext = experienceConfig.getXpNeededForNextLevel(userPokemon.experience);
+    const totalXpForNextLevel = xpForCurrentLevel + xpNeededForNext;
+    
+    let experienceText = `${userPokemon.experience} XP total`;
+    if (currentLevel < 100) {
+        const progressBar = createUnicodeBar(xpForCurrentLevel, totalXpForNextLevel, 10);
+        experienceText += `\n${progressBar}\n${xpForCurrentLevel}/${totalXpForNextLevel} XP (${xpNeededForNext} restant)`;
+    } else {
+        experienceText += `\n🏆 **NIVEAU MAX ATTEINT !**`;
+    }
+    
+    const embed = {
+        title: `📊 ${formattedName} | ID: ${userPokemon.user_pokemon_id}`,
+        description: statsDisplay,
+        fields: [
+            {
+                name: '📈 Niveau',
+                value: currentLevel.toString(),
+                inline: true
+            },
+            {
+                name: '⭐ Expérience',
+                value: experienceText,
+                inline: false
+            },
+            {
+                name: '🆔 Pokédex',
+                value: `#${userPokemon.pokemon_api_id}`,
+                inline: true
+            }
+        ],
+        color: 0xe74c3c,
+        thumbnail: {
+            url: userPokemon.sprite_url
+        },
+        footer: {
+            text: `${formattedName} - Votre Pokémon personnel`
+        }
+    };
+    
+    return embed;
+};
+
 const createPaginationButtons = (currentPage, totalPages, type, userId) => {
     if (totalPages <= 1) return [];
     
@@ -280,5 +349,6 @@ module.exports = {
     createPokemonInventoryEmbed,
     createPokemonInventoryAddEmbed,
     createPokemonInventoryRemoveEmbed,
+    createUserPokemonStatsEmbed,
     createPaginationButtons
 }; 

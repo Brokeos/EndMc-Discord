@@ -1,5 +1,7 @@
 const { get, add, update, getAllByMember, remove } = require('./user_pokemon.database');
 const cacheService = require('../services/cache.service');
+const PokedexApplication = require('../applications/pokedex.application');
+const UserPokemonStats = require('./user_pokemon_stats.entity');
 
 class UserPokemon {
 	static CACHE_TTL = 15 * 60; //15 minutes
@@ -77,6 +79,23 @@ class UserPokemon {
 		
 		await cacheService.set(cacheKey, userPokemon, this.CACHE_TTL);
 		await this._invalidateMemberCache(guild_id, user_id);
+		
+		try {
+			const baseStats = await PokedexApplication.getPokemonBaseStats(pokemon_api_id);
+			await UserPokemonStats.add(
+				guild_id,
+				user_id,
+				result.user_pokemon_id,
+				baseStats.hp,
+				baseStats.attack,
+				baseStats.defense,
+				baseStats.special_attack,
+				baseStats.special_defense,
+				baseStats.speed
+			);
+		} catch (error) {
+			console.error('Error adding Pokemon stats:', error);
+		}
 		
 		return userPokemon;
 	}
@@ -171,6 +190,12 @@ class UserPokemon {
 		
 		if (userPokemon) {
 			await this._invalidateMemberCache(userPokemon.guild_id, userPokemon.user_id);
+		}
+		
+		try {
+			await UserPokemonStats.delete(guild_id, user_id, user_pokemon_id);
+		} catch (error) {
+			console.error('Error deleting Pokemon stats:', error);
 		}
 		
 		return await remove(guild_id, user_id, user_pokemon_id);
