@@ -5,6 +5,7 @@ module.exports = {
     ...config,
     
     xpFormula: FormulaService.evaluateFormula(config.pokemon.xpFormula),
+    voiceXpFormula: FormulaService.evaluateFormula(config.voice.xpFormula),
     
     getRequiredXpForLevel(level) {
         if (level <= 1) return 0;

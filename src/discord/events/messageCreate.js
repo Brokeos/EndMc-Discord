@@ -1,5 +1,6 @@
 const { Events } = require("discord.js");
 const ExperienceService = require("../../services/experience.service");
+const NotificationService = require("../../services/notification.service");
 
 module.exports = {
     name: Events.MessageCreate,
@@ -15,21 +16,20 @@ module.exports = {
             );
             
             if (result && result.levelUps.length > 0) {
-                const levelUpMessages = result.levelUps.map(levelUp => {
-                    const pokemon = levelUp.pokemon;
-                    const statsText = Object.entries(levelUp.statsGained)
-                        .filter(([_, value]) => value > 0)
-                        .map(([stat, value]) => `${stat.replace('_', ' ').toUpperCase()}: +${value}`)
-                        .join(', ');
-                    
-                    return `🎉 **${pokemon.pokemon_name}** est passé niveau **${levelUp.newLevel}** ! ${statsText ? `\n📈 Stats gagnées: ${statsText}` : ''}`;
-                }).join('\n\n');
-                
-                await message.reply({
-                    content: levelUpMessages,
-                    allowedMentions: { repliedUser: false },
-                    flags: ['Ephemeral']
-                });
+                const levelUpMessage = await NotificationService.sendMessageLevelUpNotification(
+                    message.client,
+                    message.guild.id,
+                    message.author.id,
+                    result.levelUps
+                );
+
+                if (levelUpMessage) {
+                    await message.reply({
+                        content: levelUpMessage,
+                        allowedMentions: { repliedUser: false },
+                        flags: ['Ephemeral']
+                    });
+                }
             }
         } catch (error) {
             console.error('Erreur lors du traitement de l\'expérience:', error);

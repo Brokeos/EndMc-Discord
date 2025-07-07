@@ -33,37 +33,33 @@ class ExperienceService {
         await UserPokemon._invalidateMemberCache(guildId, userId);
     }
     
-    static async processMessageExperience(guildId, userId) {
-        if (!(await this.canGainExperience(guildId, userId))) {
-            return null;
-        }
-        
+    static async processExperience(guildId, userId, source = 'message') {
         const inventory = await UserInventory.getByMember(guildId, userId);
         if (inventory.length === 0) {
             return null;
         }
-        
-        const baseXp = this.generateRandomXp(
-            experienceConfig.pokemon.minXpGain,
-            experienceConfig.pokemon.maxXpGain
-        );
-        
+
+        const isVoice = source === 'voice';
+        const config = isVoice ? experienceConfig.voice : experienceConfig.pokemon;
+        const xpFormula = isVoice ? experienceConfig.voiceXpFormula : experienceConfig.xpFormula;
+
+        const baseXp = this.generateRandomXp(config.minXpGain, config.maxXpGain);
         const levelUpResults = [];
-        
+
         for (const inventoryItem of inventory) {
             const pokemon = inventoryItem.pokemon_data;
             const oldLevel = experienceConfig.calculateLevel(pokemon.experience);
-            
-            const calculatedXp = experienceConfig.xpFormula({ 
+
+            const calculatedXp = xpFormula({ 
                 x: baseXp, 
                 level: oldLevel,
                 exp: pokemon.experience
             });
-            
+
             const finalXp = Math.max(1, Math.floor(calculatedXp));
             const newExperience = pokemon.experience + finalXp;
             const newLevel = experienceConfig.calculateLevel(newExperience);
-            
+
             await UserPokemon.update(
                 guildId,
                 userId,
@@ -71,7 +67,7 @@ class ExperienceService {
                 newLevel,
                 newExperience
             );
-            
+
             if (newLevel > oldLevel) {
                 const levelUpsCount = newLevel - oldLevel;
                 const statsGained = await this.processLevelUp(
@@ -80,7 +76,7 @@ class ExperienceService {
                     pokemon.user_pokemon_id,
                     levelUpsCount
                 );
-                
+
                 levelUpResults.push({
                     pokemon: pokemon,
                     oldLevel: oldLevel,
@@ -90,15 +86,33 @@ class ExperienceService {
                 });
             }
         }
-        
+
         await this.invalidateUserCaches(guildId, userId);
-        await this.setCooldown(guildId, userId);
-        
+
         return {
             baseXp: baseXp,
             pokemonCount: inventory.length,
-            levelUps: levelUpResults
+            levelUps: levelUpResults,
+            source: source
         };
+    }
+    
+    static async processVoiceExperience(guildId, userId) {
+        return await this.processExperience(guildId, userId, 'voice');
+    }
+    
+    static async processMessageExperience(guildId, userId) {
+        if (!(await this.canGainExperience(guildId, userId))) {
+            return null;
+        }
+        
+        const result = await this.processExperience(guildId, userId, 'message');
+        
+        if (result) {
+            await this.setCooldown(guildId, userId);
+        }
+        
+        return result;
     }
     
     static async processLevelUp(guildId, userId, userPokemonId, levelUpsCount) {

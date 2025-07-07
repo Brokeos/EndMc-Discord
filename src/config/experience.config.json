@@ -5,12 +5,19 @@
         "cooldownMs": 2000,
         "xpFormula": "Math.floor(x*0.8) + Math.floor(x/2) + 10"
     },
+    "voice": {
+        "minXpGain": 8,
+        "maxXpGain": 15,
+        "intervalMinutes": 1,
+        "xpFormula": "Math.floor(x*0.9) + Math.floor(x/3) + 5"
+    },
     "levelUp": {
         "statsGain": {
             "min": 1,
             "max": 10
         },
-        "maxStatValue": 255
+        "maxStatValue": 255,
+        "notificationChannelId": "1375379203649835091"
     },
     "levelThresholds": [
         0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500,
